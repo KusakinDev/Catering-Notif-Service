@@ -14,12 +14,20 @@ import (
 
 	loggerconfig "github.com/KusakinDev/Catering-Notif-Service/internal/config/logger"
 	routerpkg "github.com/KusakinDev/Catering-Notif-Service/internal/routes"
+	rabbitmq "github.com/KusakinDev/Catering-Notif-Service/internal/utils/RabbitMQ"
 )
 
 func main() {
 	loggerconfig.Init()
 
+	var rmq rabbitmq.RabbitMQ
+	rmq.InitConnection()
+	rmq.InitChannel()
+	rmq.InitConsumer("emailQueue")
+	go rmq.ConsumeNotif()
+
 	routes := routerpkg.ApiHandleFunctions{}
+	routes.DefaultAPI.RMQ = &rmq
 
 	log.Printf("Server started")
 
