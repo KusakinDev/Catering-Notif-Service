@@ -6,27 +6,26 @@ import (
 )
 
 type Dish struct {
-	Id       int
-	Name     string
-	Recipe   string
-	Type     Type
-	Category Category
-	Tag      Tag
+	Id       int      `json:"id"`
+	Name     string   `json:"name"`
+	Type     Type     `json:"type"`
+	Category Category `json:"category"`
+	Tag      Tag      `json:"tag"`
 }
 
 type Category struct {
 	Id           int
-	CategoryDish string
+	CategoryDish string `json:"category_dish"`
 }
 
 type Tag struct {
 	Id      int
-	TagDish string
+	TagDish string `json:"tag_dish"`
 }
 
 type Type struct {
 	Id       int
-	TypeDish string
+	TypeDish string `json:"type_dish"`
 }
 
 func (dish *Dish) DecodeFromContext(c *gin.Context) error {

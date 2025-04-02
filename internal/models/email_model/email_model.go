@@ -60,6 +60,7 @@ func (email *Email) GetAllFromTable() ([]Email, int) {
 	err := db.Connection.Find(&emails).Error
 	if err != nil {
 		db.CloseDB()
+		logrus.Errorln("Error get all emails from table")
 		return []Email{}, 503
 	}
 	db.CloseDB()
