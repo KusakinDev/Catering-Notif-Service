@@ -3,8 +3,6 @@ package notificationmodel
 import (
 	"bytes"
 	"html/template"
-	"log"
-	"os"
 
 	emailconfig "github.com/KusakinDev/Catering-Notif-Service/.env/email"
 	dishmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/dish_model"
@@ -47,7 +45,6 @@ func (notif *Notification) Send() int {
 	m.SetHeader("From", emailconfig.Email)
 	m.SetHeader("To", notif.Email.Email)
 	m.SetHeader("Subject", "Catering Service: Новое блюдо в нашем меню!")
-
 	m.SetBody("text/html", body.String())
 
 	d := gomail.NewDialer(emailconfig.Host, emailconfig.Port, emailconfig.Email, emailconfig.Password)
@@ -57,19 +54,5 @@ func (notif *Notification) Send() int {
 		logrus.Error("Error send email: ", err)
 		return 404
 	}
-
-	file, err := os.Create("output.txt")
-	if err != nil {
-		log.Fatalf("Ошибка при создании файла: %v", err)
-	}
-	// Не забывайте закрывать файл в конце
-	defer file.Close()
-
-	// Запись строки в файл
-	_, err = file.WriteString(body.String())
-	if err != nil {
-		log.Fatalf("Ошибка при записи в файл: %v", err)
-	}
-
 	return 200
 }
