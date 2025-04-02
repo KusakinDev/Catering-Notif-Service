@@ -10,6 +10,7 @@
 package api
 
 import (
+	notifnewdish "github.com/KusakinDev/Catering-Notif-Service/internal/handlers/notif_new_dish"
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,13 +20,12 @@ type DefaultAPI struct {
 // Post /AddNewEmail
 // Add new email for notification
 func (api *DefaultAPI) AddNewEmailPost(c *gin.Context) {
-	// Your handler implementation
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
 // Post /NotifNewDish
 // Create new notification in queue
 func (api *DefaultAPI) NotifNewDishPost(c *gin.Context) {
-	// Your handler implementation
-	c.JSON(200, gin.H{"status": "OK"})
+	code, message := notifnewdish.NotifNewDish(c)
+	c.JSON(code, gin.H{"message": message})
 }
