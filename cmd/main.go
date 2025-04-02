@@ -12,10 +12,13 @@ package main
 import (
 	"log"
 
+	loggerconfig "github.com/KusakinDev/Catering-Notif-Service/internal/config/logger"
 	routerpkg "github.com/KusakinDev/Catering-Notif-Service/internal/routes"
 )
 
 func main() {
+	loggerconfig.Init()
+
 	routes := routerpkg.ApiHandleFunctions{}
 
 	log.Printf("Server started")
