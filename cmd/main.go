@@ -11,27 +11,58 @@ package main
 
 import (
 	"log"
+	"net"
 
 	loggerconfig "github.com/KusakinDev/Catering-Notif-Service/internal/config/logger"
+	grpcnotifnewmenu "github.com/KusakinDev/Catering-Notif-Service/internal/handlers/grpc_notif_new_menu"
 	routerpkg "github.com/KusakinDev/Catering-Notif-Service/internal/routes"
+	pb "github.com/KusakinDev/Catering-Notif-Service/internal/services/notif_new_menu/notif_new_menu"
 	rabbitmq "github.com/KusakinDev/Catering-Notif-Service/internal/utils/RabbitMQ"
+	"google.golang.org/grpc"
 )
 
 func main() {
 	loggerconfig.Init()
 
-	var rmq rabbitmq.RabbitMQ
-	rmq.InitConnection()
-	rmq.InitChannel()
-	rmq.InitConsumer("emailQueue")
-	go rmq.ConsumeNotif()
+	go func() {
+		var rmqDish rabbitmq.RabbitMQ
+		rmqDish.InitConnection()
+		rmqDish.InitChannel()
+		rmqDish.InitConsumer("dishQueue")
+		go rmqDish.ConsumeNotifDish()
 
-	routes := routerpkg.ApiHandleFunctions{}
-	routes.DefaultAPI.RMQ = &rmq
+		routes := routerpkg.ApiHandleFunctions{}
+		routes.DefaultAPI.RMQ = &rmqDish
 
-	log.Printf("Server started")
+		log.Printf("Server started")
 
-	router := routerpkg.NewRouter(routes)
+		router := routerpkg.NewRouter(routes)
 
-	log.Fatal(router.Run(":8082"))
+		log.Fatal(router.Run(":8082"))
+	}()
+
+	go func() {
+		var rmqMenu rabbitmq.RabbitMQ
+		rmqMenu.InitConnection()
+		rmqMenu.InitChannel()
+		rmqMenu.InitConsumer("menuQueue")
+		go rmqMenu.ConsumeNotifMessage()
+
+		listener, err := net.Listen("tcp", ":50051")
+		if err != nil {
+			log.Fatalf("Failed to listen: %v", err)
+		}
+
+		grpcServer := grpc.NewServer()
+
+		pb.RegisterNotifNewMenuServiceServer(grpcServer, &grpcnotifnewmenu.Server{Rmq: &rmqMenu})
+
+		log.Println("gRPC server is running on port :50051")
+		if err := grpcServer.Serve(listener); err != nil {
+			log.Fatalf("Failed to serve gRPC server: %v", err)
+		}
+	}()
+
+	select {}
+
 }
