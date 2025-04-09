@@ -14,6 +14,7 @@ import (
 
 type Notification struct {
 	Dish     dishmodel.Dish
+	Message  string
 	Email    emailmodel.Email
 	Template templatemodel.Template
 }
@@ -28,9 +29,9 @@ func (notif *Notification) GetTemplateByTag(tag string) int {
 	return 200
 }
 
-func (notif *Notification) Send() int {
+func (notif *Notification) SendDish() int {
 
-	tmpl, err := template.New("email").Parse(notif.Template.Template)
+	tmpl, err := template.New("new_dish").Parse(notif.Template.Template)
 	if err != nil {
 		logrus.Errorln(err)
 	}
@@ -54,5 +55,35 @@ func (notif *Notification) Send() int {
 		logrus.Error("Error send email: ", err)
 		return 404
 	}
+	return 200
+}
+
+func (notif *Notification) SendMessage() int {
+
+	tmpl, err := template.New("new_menu").Parse(notif.Template.Template)
+	if err != nil {
+		logrus.Errorln(err)
+	}
+
+	var body bytes.Buffer
+	err = tmpl.Execute(&body, notif)
+	if err != nil {
+		logrus.Errorln(err)
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", emailconfig.Email)
+	m.SetHeader("To", notif.Email.Email)
+	m.SetHeader("Subject", "Catering Service: Обновление меню!")
+	m.SetBody("text/html", body.String())
+
+	d := gomail.NewDialer(emailconfig.Host, emailconfig.Port, emailconfig.Email, emailconfig.Password)
+
+	err = d.DialAndSend(m)
+	if err != nil {
+		logrus.Error("Error send email: ", err)
+		return 404
+	}
+	logrus.Infoln("Success send email to:", notif.Email.Email)
 	return 200
 }
