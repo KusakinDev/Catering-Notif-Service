@@ -17,7 +17,7 @@ type RabbitMQ struct {
 func (rmq *RabbitMQ) InitConnection() error {
 	var err error
 	//dsn := os.Getenv("RABBITMQ_URL")
-	dsn := "amqp://guest:guest@rabbitmq:5672/"
+	dsn := "amqp://guest:guest@localhost:5672/"
 	rmq.connection, err = amqp.Dial(dsn)
 	if err != nil {
 		logrus.Errorln("RabbitMQ.connecction: ", err)
@@ -90,7 +90,7 @@ func (rmq *RabbitMQ) Publish(body []byte, queueName string) error {
 	return err
 }
 
-func (rmq *RabbitMQ) ConsumeNotif() {
+func (rmq *RabbitMQ) ConsumeNotifDish() {
 	for d := range rmq.Consumer {
 		var notif notificationmodel.Notification
 		err := json.Unmarshal(d.Body, &notif)
@@ -98,7 +98,19 @@ func (rmq *RabbitMQ) ConsumeNotif() {
 			logrus.Errorln("Error decoding notification: ", err)
 			continue
 		}
-		notif.Send()
+		notif.SendDish()
+	}
+}
+
+func (rmq *RabbitMQ) ConsumeNotifMessage() {
+	for d := range rmq.Consumer {
+		var notif notificationmodel.Notification
+		err := json.Unmarshal(d.Body, &notif)
+		if err != nil {
+			logrus.Errorln("Error decoding notification: ", err)
+			continue
+		}
+		notif.SendMessage()
 	}
 }
 
