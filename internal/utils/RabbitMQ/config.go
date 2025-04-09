@@ -16,7 +16,9 @@ type RabbitMQ struct {
 
 func (rmq *RabbitMQ) InitConnection() error {
 	var err error
-	rmq.connection, err = amqp.Dial("amqp://guest:guest@localhost:5672/")
+	//dsn := os.Getenv("RABBITMQ_URL")
+	dsn := "amqp://guest:guest@rabbitmq:5672/"
+	rmq.connection, err = amqp.Dial(dsn)
 	if err != nil {
 		logrus.Errorln("RabbitMQ.connecction: ", err)
 		return err
