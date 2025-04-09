@@ -16,7 +16,7 @@ func NotifNewDish(c *gin.Context, rmq *rabbitmq.RabbitMQ) (int, string) {
 	dish.DecodeFromContext(c)
 
 	var notif notificationmodel.Notification
-	notif.GetTemplateByTag("email")
+	notif.GetTemplateByTag("new_dish")
 	notif.Dish = dish
 
 	var email emailmodel.Email
@@ -34,7 +34,7 @@ func NotifNewDish(c *gin.Context, rmq *rabbitmq.RabbitMQ) (int, string) {
 			return 500, "Internal error"
 		}
 
-		err = rmq.Publish(body, "emailQueue")
+		err = rmq.Publish(body, "dishQueue")
 		if err != nil {
 			logrus.Error("Failed to publish message to RabbitMQ: ", err)
 			return 500, "Error sending notification"
