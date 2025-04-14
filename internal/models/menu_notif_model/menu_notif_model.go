@@ -1,4 +1,4 @@
-package notificationmodel
+package menunotificationmodel
 
 import (
 	"bytes"
@@ -12,14 +12,14 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-type Notification struct {
+type MenuNotification struct {
 	Dish     dishmodel.Dish
 	Message  string
 	Email    emailmodel.Email
 	Template templatemodel.Template
 }
 
-func (notif *Notification) GetTemplateByTag(tag string) int {
+func (notif *MenuNotification) GetTemplateByTag(tag string) int {
 	notif.Template.Description = tag
 	code := notif.Template.GetFromTableByDescription()
 	if code != 200 {
@@ -29,37 +29,7 @@ func (notif *Notification) GetTemplateByTag(tag string) int {
 	return 200
 }
 
-func (notif *Notification) SendDish() int {
-
-	tmpl, err := template.New("new_dish").Parse(notif.Template.Template)
-	if err != nil {
-		logrus.Errorln(err)
-	}
-
-	var body bytes.Buffer
-	err = tmpl.Execute(&body, notif.Dish)
-	if err != nil {
-		logrus.Errorln(err)
-	}
-
-	m := gomail.NewMessage()
-	m.SetHeader("From", emailconfig.Email)
-	m.SetHeader("To", notif.Email.Email)
-	m.SetHeader("Subject", "Catering Service: Новое блюдо в нашем меню!")
-	m.SetBody("text/html", body.String())
-
-	d := gomail.NewDialer(emailconfig.Host, emailconfig.Port, emailconfig.Email, emailconfig.Password)
-
-	err = d.DialAndSend(m)
-	if err != nil {
-		logrus.Error("Error send email: ", err)
-		return 404
-	}
-	return 200
-}
-
-func (notif *Notification) SendMessage() int {
-
+func (notif *MenuNotification) Send() int {
 	tmpl, err := template.New("new_menu").Parse(notif.Template.Template)
 	if err != nil {
 		logrus.Errorln(err)
@@ -85,5 +55,34 @@ func (notif *Notification) SendMessage() int {
 		return 404
 	}
 	logrus.Infoln("Success send email to:", notif.Email.Email)
+	return 200
+}
+
+func (notif *MenuNotification) SendDish() int {
+
+	tmpl, err := template.New("new_dish").Parse(notif.Template.Template)
+	if err != nil {
+		logrus.Errorln(err)
+	}
+
+	var body bytes.Buffer
+	err = tmpl.Execute(&body, notif.Dish)
+	if err != nil {
+		logrus.Errorln(err)
+	}
+
+	m := gomail.NewMessage()
+	m.SetHeader("From", emailconfig.Email)
+	m.SetHeader("To", notif.Email.Email)
+	m.SetHeader("Subject", "Catering Service: Новое блюдо в нашем меню!")
+	m.SetBody("text/html", body.String())
+
+	d := gomail.NewDialer(emailconfig.Host, emailconfig.Port, emailconfig.Email, emailconfig.Password)
+
+	err = d.DialAndSend(m)
+	if err != nil {
+		logrus.Error("Error send email: ", err)
+		return 404
+	}
 	return 200
 }
