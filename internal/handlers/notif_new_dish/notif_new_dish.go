@@ -5,7 +5,7 @@ import (
 
 	dishmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/dish_model"
 	emailmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/email_model"
-	notificationmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/notification_model"
+	notificationmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/menu_notif_model"
 	rabbitmq "github.com/KusakinDev/Catering-Notif-Service/internal/utils/RabbitMQ"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -15,7 +15,7 @@ func NotifNewDish(c *gin.Context, rmq *rabbitmq.RabbitMQ) (int, string) {
 	var dish dishmodel.Dish
 	dish.DecodeFromContext(c)
 
-	var notif notificationmodel.Notification
+	var notif notificationmodel.MenuNotification
 	notif.GetTemplateByTag("new_dish")
 	notif.Dish = dish
 
