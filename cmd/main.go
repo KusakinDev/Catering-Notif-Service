@@ -14,9 +14,9 @@ import (
 	"net"
 
 	loggerconfig "github.com/KusakinDev/Catering-Notif-Service/internal/config/logger"
-	grpcnotifnewmenu "github.com/KusakinDev/Catering-Notif-Service/internal/handlers/grpc_notif_new_menu"
 	routerpkg "github.com/KusakinDev/Catering-Notif-Service/internal/routes"
-	pb "github.com/KusakinDev/Catering-Notif-Service/internal/services/notif_new_menu/notif_new_menu"
+	pb "github.com/KusakinDev/Catering-Notif-Service/internal/services/notification_service_gen"
+	notificationserviceserver "github.com/KusakinDev/Catering-Notif-Service/internal/services/notification_service_server"
 	rabbitmq "github.com/KusakinDev/Catering-Notif-Service/internal/utils/RabbitMQ"
 	"google.golang.org/grpc"
 )
@@ -24,15 +24,17 @@ import (
 func main() {
 	loggerconfig.Init()
 
-	go func() {
-		var rmqDish rabbitmq.RabbitMQ
-		rmqDish.InitConnection()
-		rmqDish.InitChannel()
-		rmqDish.InitConsumer("dishQueue")
-		go rmqDish.ConsumeNotifDish()
+	var rmq rabbitmq.RabbitMQ
+	rmq.InitConnection()
+	rmq.InitChannel()
+	rmq.InitConsumer("reset", "reset")
+	rmq.InitConsumer("menu", "menu")
+	go rmq.ConsumeReset()
+	go rmq.ConsumeMenu()
 
+	go func() {
 		routes := routerpkg.ApiHandleFunctions{}
-		routes.DefaultAPI.RMQ = &rmqDish
+		routes.DefaultAPI.RMQ = &rmq
 
 		log.Printf("Server started")
 
@@ -42,12 +44,6 @@ func main() {
 	}()
 
 	go func() {
-		var rmqMenu rabbitmq.RabbitMQ
-		rmqMenu.InitConnection()
-		rmqMenu.InitChannel()
-		rmqMenu.InitConsumer("menuQueue")
-		go rmqMenu.ConsumeNotifMessage()
-
 		listener, err := net.Listen("tcp", ":50051")
 		if err != nil {
 			log.Fatalf("Failed to listen: %v", err)
@@ -55,7 +51,7 @@ func main() {
 
 		grpcServer := grpc.NewServer()
 
-		pb.RegisterNotifNewMenuServiceServer(grpcServer, &grpcnotifnewmenu.Server{Rmq: &rmqMenu})
+		pb.RegisterNotificationServiceServer(grpcServer, &notificationserviceserver.Server{Rmq: &rmq})
 
 		log.Println("gRPC server is running on port :50051")
 		if err := grpcServer.Serve(listener); err != nil {
