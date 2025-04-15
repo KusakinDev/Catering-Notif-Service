@@ -3,9 +3,12 @@ package rabbitmq
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
 
 	menunotificationmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/menu_notif_model"
 	resetnotifmodel "github.com/KusakinDev/Catering-Notif-Service/internal/models/reset_notif_model"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
@@ -19,8 +22,16 @@ type RabbitMQ struct {
 
 func (rmq *RabbitMQ) InitConnection() error {
 	var err error
-	//dsn := os.Getenv("RABBITMQ_URL")
-	dsn := "amqp://guest:guest@localhost:5672/"
+
+	err = godotenv.Load("dev.env")
+	if err != nil {
+		log.Fatalf("Error load .env: %v", err)
+	}
+	host := os.Getenv("RMQ_HOST")
+	user := os.Getenv("RMQ_USER")
+	password := os.Getenv("RMQ_PASSWORD")
+	port := os.Getenv("RMQ_PORT")
+	dsn := "amqp://" + user + ":" + password + "@" + host + ":" + port + "/"
 	rmq.connection, err = amqp.Dial(dsn)
 	if err != nil {
 		logrus.Errorln("RabbitMQ.connecction: ", err)

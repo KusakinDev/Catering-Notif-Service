@@ -19,5 +19,17 @@ func main() {
 	var template templatemodel.Template
 	template.MigrateToDB(db)
 
+	var template1 templatemodel.Template
+	template1.LoadNewDishTemplate()
+	template1.AddToTable()
+
+	var template2 templatemodel.Template
+	template2.LoadNewMenuTemplate()
+	template2.AddToTable()
+
+	var template3 templatemodel.Template
+	template3.LoadResetTemplate()
+	template3.AddToTable()
+
 	db.CloseDB()
 }

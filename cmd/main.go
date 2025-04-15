@@ -12,12 +12,14 @@ package main
 import (
 	"log"
 	"net"
+	"os"
 
 	loggerconfig "github.com/KusakinDev/Catering-Notif-Service/internal/config/logger"
 	routerpkg "github.com/KusakinDev/Catering-Notif-Service/internal/routes"
 	pb "github.com/KusakinDev/Catering-Notif-Service/internal/services/notification_service_gen"
 	notificationserviceserver "github.com/KusakinDev/Catering-Notif-Service/internal/services/notification_service_server"
 	rabbitmq "github.com/KusakinDev/Catering-Notif-Service/internal/utils/RabbitMQ"
+	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
 
@@ -32,6 +34,13 @@ func main() {
 	go rmq.ConsumeReset()
 	go rmq.ConsumeMenu()
 
+	err := godotenv.Load("dev.env")
+	if err != nil {
+		log.Fatalf("Error load .env: %v", err)
+	}
+	restPort := os.Getenv("REST_PORT")
+	gRPCport := os.Getenv("GRPC_PORT")
+
 	go func() {
 		routes := routerpkg.ApiHandleFunctions{}
 		routes.DefaultAPI.RMQ = &rmq
@@ -40,11 +49,11 @@ func main() {
 
 		router := routerpkg.NewRouter(routes)
 
-		log.Fatal(router.Run(":8082"))
+		log.Fatal(router.Run(":" + restPort))
 	}()
 
 	go func() {
-		listener, err := net.Listen("tcp", ":50051")
+		listener, err := net.Listen("tcp", ":"+gRPCport)
 		if err != nil {
 			log.Fatalf("Failed to listen: %v", err)
 		}
@@ -53,7 +62,7 @@ func main() {
 
 		pb.RegisterNotificationServiceServer(grpcServer, &notificationserviceserver.Server{Rmq: &rmq})
 
-		log.Println("gRPC server is running on port :50051")
+		log.Println("gRPC server is running on port :" + gRPCport)
 		if err := grpcServer.Serve(listener); err != nil {
 			log.Fatalf("Failed to serve gRPC server: %v", err)
 		}
