@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package notif;
+
+option go_package = "/notification_service";
+
+service NotificationService {
+  rpc NotifNewMenu (MenuRequest) returns (Response);
+  rpc ResetNotif (ResetRequest) returns (Response);
+}
+
+message Response {
+  int32 code = 1;
+  string message = 2;
+}
+
+message ResetRequest {
+  string email = 1;
+  int32 resetCode = 2;
+}
+
+
+message MenuRequest {
+    string message = 1;
+}
+
+
+//protoc --go_out=. --go-grpc_out=. notification_service.proto
